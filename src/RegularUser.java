@@ -28,8 +28,8 @@ public class RegularUser implements TaskManager {
             System.out.println("[Info] No tasks added yet.");
         } else {
             System.out.println("\n[Your Task List]");
-            for (Task t : tasks) {
-                System.out.println("- " + t);
+            for (int i=0;i<tasks.size();i++) {
+                System.out.println("["+(i+1)+"]"+"- " + tasks.get(i));
             }
         }
     }
@@ -59,6 +59,26 @@ public class RegularUser implements TaskManager {
             }
         }
     }
+
+//    task complete method
+             public void markTaskCompleted(int taskIndex) {
+                if (taskIndex >= 0 && taskIndex < tasks.size()) {
+              Task t = tasks.get(taskIndex);
+               t.setCompleted(true);
+               System.out.println("[Update] Task marked as completed: " + t.getName());
+             } else {
+              System.out.println("[Error] Invalid task index!");
+             }
+        }
+// totoal studytime
+public int getTotalStudyTime() {
+    int total = 0;
+    for (Task t : tasks) {
+        total += t.getTimeInMinutes();
+    }
+    return total;
+}
+
 
 
     public void showSubjectSummary() {

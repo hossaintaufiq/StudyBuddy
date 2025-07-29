@@ -3,11 +3,13 @@ public class Task {
         private String name;
         private String subject;
         private int timeInMinutes;
+        private boolean isCompleted;  // new field
 
         public Task(String name, String subject, int timeInMinutes) {
             this.name = name;
             this.subject = subject;
             this.timeInMinutes = timeInMinutes;
+            this.isCompleted = false;
         }
 
         public String getName() {
@@ -21,12 +23,19 @@ public class Task {
         public int getTimeInMinutes() {
             return timeInMinutes;
         }
+        public boolean isCompleted() {
+        return isCompleted;
+       }
+
+       public void setCompleted(boolean completed) {
+          isCompleted = completed;
+       }
 
     @Override
     public String toString() {
-        return "Task: " + name + " | Subject: " + subject + " | Duration: " + timeInMinutes + " mins";
+        String status = isCompleted ? "[Completed]" : "[Pending]";
+        return status + " Task: " + name + " | Subject: " + subject + " | Duration: " + timeInMinutes + " mins";
     }
-
 
 
 }

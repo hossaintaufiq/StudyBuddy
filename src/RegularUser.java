@@ -81,25 +81,42 @@ public class RegularUser implements TaskManager {
         }
     }
 
-    public void markTaskCompleted(int index) {
+//    public void markTaskCompleted(int index) {
+//        if (index < 0 || index >= tasks.size()) {
+//            System.out.println("[Error] Invalid task index!");
+//            return;
+//        }
+//        tasks.get(index).setCompleted(true);
+//        FileManager.saveTasks(userEmail, tasks);
+//        System.out.println("[Update] Task marked as completed: " + tasks.get(index).getName());
+//    }
+    public void markTaskCompleted(int index) throws InvalidTaskException {
         if (index < 0 || index >= tasks.size()) {
-            System.out.println("[Error] Invalid task index!");
-            return;
+            throw new InvalidTaskException("Invalid task index: " + (index + 1));
         }
         tasks.get(index).setCompleted(true);
         FileManager.saveTasks(userEmail, tasks);
         System.out.println("[Update] Task marked as completed: " + tasks.get(index).getName());
     }
 
-    public void deleteTask(int index) {
+//    public void deleteTask(int index) {
+//        if (index < 0 || index >= tasks.size()) {
+//            System.out.println("[Error] Invalid task index!");
+//            return;
+//        }
+//        Task removed = tasks.remove(index);
+//        FileManager.saveTasks(userEmail, tasks);
+//        System.out.println("[Update] Task deleted: " + removed.getName());
+//    }
+    public void deleteTask(int index) throws InvalidTaskException {
         if (index < 0 || index >= tasks.size()) {
-            System.out.println("[Error] Invalid task index!");
-            return;
+            throw new InvalidTaskException("Invalid task index: " + (index + 1));
         }
         Task removed = tasks.remove(index);
         FileManager.saveTasks(userEmail, tasks);
         System.out.println("[Update] Task deleted: " + removed.getName());
     }
+
 
     public int getTotalStudyTime() {
         int total = 0;

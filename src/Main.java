@@ -22,17 +22,25 @@ public class Main {
                 String email = scanner.nextLine();
                 System.out.print("Enter Password: ");
                 String password = scanner.nextLine();
-                userManager.register(email, password);
+
+                try {
+                    userManager.register(email, password);
+                } catch (UserAlreadyExistsException e) {
+                    System.out.println("[Error] " + e.getMessage());
+                }
 
             } else if (choice == 2) {
                 System.out.print("Enter Email: ");
                 String email = scanner.nextLine();
                 System.out.print("Enter Password: ");
                 String password = scanner.nextLine();
-                User u = userManager.login(email, password);
-                if (u != null) {
+
+                try {
+                    User u = userManager.login(email, password);
                     user = new RegularUser(u.getEmail());
                     break;
+                } catch (UserNotFoundException e) {
+                    System.out.println("[Error] " + e.getMessage());
                 }
 
             } else if (choice == 3) {
@@ -78,7 +86,11 @@ public class Main {
                     System.out.print("Enter task number to mark as completed: ");
                     int taskNum = scanner.nextInt();
                     scanner.nextLine();
-                    user.markTaskCompleted(taskNum - 1);
+                    try {
+                        user.markTaskCompleted(taskNum - 1);
+                    } catch (InvalidTaskException e) {
+                        System.out.println("[Error] " + e.getMessage());
+                    }
                 }
                 case 6 -> System.out.println("[Total Study Time] " + user.getTotalStudyTime() + " minutes");
                 case 7 -> {
@@ -86,7 +98,11 @@ public class Main {
                     System.out.print("Enter task number to delete: ");
                     int delNum = scanner.nextInt();
                     scanner.nextLine();
-                    user.deleteTask(delNum - 1);
+                    try {
+                        user.deleteTask(delNum - 1);
+                    } catch (InvalidTaskException e) {
+                        System.out.println("[Error] " + e.getMessage());
+                    }
                 }
                 case 8 -> {
                     System.out.println("Thank you for using Smart Study Buddy. Goodbye!");

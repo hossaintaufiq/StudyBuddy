@@ -44,10 +44,35 @@ public class UserManager {
     }
 
     // Register new user
-    public boolean register(String email, String password) {
+//    public boolean register(String email, String password) {
+//        if (users.containsKey(email)) {
+//            System.out.println("[Error] Email already registered.");
+//            return false;
+//        }
+//        User user = new User(email, password);
+//        users.put(email, user);
+//        saveUsers();
+//        System.out.println("[Info] Registration successful!");
+//        return true;
+//    }
+//
+//    // Login user
+//    public User login(String email, String password) {
+//        if (!users.containsKey(email)) {
+//            System.out.println("[Error] Email not registered.");
+//            return null;
+//        }
+//        User user = users.get(email);
+//        if (!user.getPassword().equals(password)) {
+//            System.out.println("[Error] Incorrect password.");
+//            return null;
+//        }
+//        System.out.println("[Info] Login successful!");
+//        return user;
+//    }
+    public boolean register(String email, String password) throws UserAlreadyExistsException {
         if (users.containsKey(email)) {
-            System.out.println("[Error] Email already registered.");
-            return false;
+            throw new UserAlreadyExistsException("Email already registered: " + email);
         }
         User user = new User(email, password);
         users.put(email, user);
@@ -56,18 +81,16 @@ public class UserManager {
         return true;
     }
 
-    // Login user
-    public User login(String email, String password) {
+    public User login(String email, String password) throws UserNotFoundException {
         if (!users.containsKey(email)) {
-            System.out.println("[Error] Email not registered.");
-            return null;
+            throw new UserNotFoundException("Email not registered: " + email);
         }
         User user = users.get(email);
         if (!user.getPassword().equals(password)) {
-            System.out.println("[Error] Incorrect password.");
-            return null;
+            throw new UserNotFoundException("Incorrect password for email: " + email);
         }
         System.out.println("[Info] Login successful!");
         return user;
     }
+
 }

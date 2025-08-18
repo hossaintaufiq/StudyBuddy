@@ -1,15 +1,19 @@
+import javax.swing.*;
 
-import  java.util.*;
-//import PromodoroTimer;
 public class StandardPomodoroTimer extends PomodoroTimer {
+    private JTextArea output;
 
-    public void startSession() {
-        System.out.println("Starting 25-minute focus session...");
-        // simulate with Thread.sleep in real implementation
+    public StandardPomodoroTimer(JTextArea outputArea) {
+        this.output = outputArea;
     }
 
+    @Override
+    public void startSession() {
+        output.append("Starting 25-minute focus session...\n");
+    }
 
+    @Override
     public void takeBreak() {
-        System.out.println("Taking 5-minute break...");
+        output.append("Taking 5-minute break...\n");
     }
 }

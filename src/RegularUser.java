@@ -1,15 +1,20 @@
+import javax.swing.*;
 import java.util.*;
 
 public class RegularUser implements TaskManager {
     private String userEmail;
     private List<Task> tasks;
     private List<Subject> subjects;
-    private PomodoroTimer timer = new StandardPomodoroTimer();
+    private JTextArea outputArea;
+    private PomodoroTimer timer = new StandardPomodoroTimer(outputArea);
 
-    public RegularUser(String email) {
+
+    public RegularUser(String email,JTextArea outputArea) {
         this.userEmail = email;
         this.tasks = FileManager.loadTasks(email);
         this.subjects = new ArrayList<>();
+        this.outputArea = outputArea;
+        this.timer = new StandardPomodoroTimer(outputArea);
 
         // initialize subjects from tasks
         for (Task t : tasks) {
@@ -22,6 +27,12 @@ public class RegularUser implements TaskManager {
             }
             if (!exists) subjects.add(new Subject(t.getSubject()));
         }
+    }
+    public String getEmail() {
+        return userEmail;
+    }
+    public List<Subject> getSubjects() {
+        return subjects;
     }
 
     @Override
@@ -81,15 +92,6 @@ public class RegularUser implements TaskManager {
         }
     }
 
-//    public void markTaskCompleted(int index) {
-//        if (index < 0 || index >= tasks.size()) {
-//            System.out.println("[Error] Invalid task index!");
-//            return;
-//        }
-//        tasks.get(index).setCompleted(true);
-//        FileManager.saveTasks(userEmail, tasks);
-//        System.out.println("[Update] Task marked as completed: " + tasks.get(index).getName());
-//    }
     public void markTaskCompleted(int index) throws InvalidTaskException {
         if (index < 0 || index >= tasks.size()) {
             throw new InvalidTaskException("Invalid task index: " + (index + 1));
@@ -99,15 +101,6 @@ public class RegularUser implements TaskManager {
         System.out.println("[Update] Task marked as completed: " + tasks.get(index).getName());
     }
 
-//    public void deleteTask(int index) {
-//        if (index < 0 || index >= tasks.size()) {
-//            System.out.println("[Error] Invalid task index!");
-//            return;
-//        }
-//        Task removed = tasks.remove(index);
-//        FileManager.saveTasks(userEmail, tasks);
-//        System.out.println("[Update] Task deleted: " + removed.getName());
-//    }
     public void deleteTask(int index) throws InvalidTaskException {
         if (index < 0 || index >= tasks.size()) {
             throw new InvalidTaskException("Invalid task index: " + (index + 1));

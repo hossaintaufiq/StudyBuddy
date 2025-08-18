@@ -1,36 +1,185 @@
+//import javax.swing.*;
+//import java.util.*;
+//
+//public class RegularUser implements TaskManager {
+//    private String userEmail;
+//    private List<Task> tasks;
+//    private List<Subject> subjects;
+//    private JTextArea outputArea;
+//    private PomodoroTimer timer = new StandardPomodoroTimer(outputArea);
+//
+//
+//    public RegularUser(String email,JTextArea outputArea) {
+//        this.userEmail = email;
+//        this.tasks = FileManager.loadTasks(email);
+//        this.subjects = new ArrayList<>();
+//        this.outputArea = outputArea;
+//        this.timer = new StandardPomodoroTimer(outputArea);
+//
+//        // initialize subjects from tasks
+//        for (Task t : tasks) {
+//            boolean exists = false;
+//            for (Subject s : subjects) {
+//                if (s.getName().equalsIgnoreCase(t.getSubject())) {
+//                    exists = true;
+//                    break;
+//                }
+//            }
+//            if (!exists) subjects.add(new Subject(t.getSubject()));
+//        }
+//    }
+//    public String getEmail() {
+//        return userEmail;
+//    }
+//    public List<Subject> getSubjects() {
+//        return subjects;
+//    }
+//
+//    @Override
+//    public void addTask(Task task) {
+//        tasks.add(task);
+//
+//        boolean subjectExists = false;
+//        for (Subject s : subjects) {
+//            if (s.getName().equalsIgnoreCase(task.getSubject())) {
+//                subjectExists = true;
+//                break;
+//            }
+//        }
+//        if (!subjectExists) subjects.add(new Subject(task.getSubject()));
+//
+//        FileManager.saveTasks(userEmail, tasks);
+//        System.out.println("[Task Added] " + task);
+//    }
+//
+//    @Override
+//    public void showTasks() {
+//        if (tasks.isEmpty()) {
+//            System.out.println("[Info] No tasks added yet.");
+//            return;
+//        }
+//        System.out.println("\n[Your Task List]");
+//        for (int i = 0; i < tasks.size(); i++) {
+//            System.out.println("[" + (i + 1) + "] " + tasks.get(i));
+//        }
+//    }
+//
+//    @Override
+//    public void runPomodoroSessions() {
+//        if (tasks.isEmpty()) {
+//            System.out.println("[Info] No tasks to run Pomodoro sessions.");
+//            return;
+//        }
+//
+//        for (Task task : tasks) {
+//            if (task.isCompleted()) continue;
+//
+//            System.out.println("\n[Starting Task] " + task.getName());
+//            int sessionCount = task.getTimeInMinutes() / 25;
+//            for (int i = 0; i < sessionCount; i++) {
+//                System.out.println("[Session] " + (i + 1) + "/" + sessionCount);
+//                timer.startSession();
+//                timer.takeBreak();
+//            }
+//
+//            // add time to corresponding subject
+//            for (Subject s : subjects) {
+//                if (s.getName().equalsIgnoreCase(task.getSubject())) {
+//                    s.addTime(task.getTimeInMinutes());
+//                    break;
+//                }
+//            }
+//        }
+//    }
+//
+//    public void markTaskCompleted(int index) throws InvalidTaskException {
+//        if (index < 0 || index >= tasks.size()) {
+//            throw new InvalidTaskException("Invalid task index: " + (index + 1));
+//        }
+//        tasks.get(index).setCompleted(true);
+//        FileManager.saveTasks(userEmail, tasks);
+//        System.out.println("[Update] Task marked as completed: " + tasks.get(index).getName());
+//    }
+//
+//    public void deleteTask(int index) throws InvalidTaskException {
+//        if (index < 0 || index >= tasks.size()) {
+//            throw new InvalidTaskException("Invalid task index: " + (index + 1));
+//        }
+//        Task removed = tasks.remove(index);
+//        FileManager.saveTasks(userEmail, tasks);
+//        System.out.println("[Update] Task deleted: " + removed.getName());
+//    }
+//
+//
+//    public int getTotalStudyTime() {
+//        int total = 0;
+//        for (Task t : tasks) total += t.getTimeInMinutes();
+//        return total;
+//    }
+//
+//    public void showSubjectSummary() {
+//        if (subjects.isEmpty()) {
+//            System.out.println("[Info] No study summary available.");
+//            return;
+//        }
+//        System.out.println("\n[Study Summary by Subject]");
+//        for (Subject s : subjects) {
+//            System.out.println("- Subject: " + s.getName() + " | Total Time: " + s.getTotalTimeSpent() + " minutes");
+//        }
+//    }
+//}
+
+
+// RegularUser.java
 import javax.swing.*;
 import java.util.*;
+import java.util.function.Consumer;
 
 public class RegularUser implements TaskManager {
     private String userEmail;
     private List<Task> tasks;
     private List<Subject> subjects;
-    private JTextArea outputArea;
-    private PomodoroTimer timer = new StandardPomodoroTimer(outputArea);
+    private PomodoroTimer timer;
+    private Consumer<String> output;
 
+    // Console-specific constructor
+    public RegularUser(String email) {
+        this(email, s -> System.out.println(s));
+    }
 
-    public RegularUser(String email,JTextArea outputArea) {
+    // GUI constructor
+    public RegularUser(String email, JTextArea outputArea) {
+        this(email, s -> SwingUtilities.invokeLater(() -> {
+            outputArea.append(s + "\n");
+            outputArea.setCaretPosition(outputArea.getDocument().getLength());
+        }));
+    }
+
+    // Unified constructor with output consumer
+    private RegularUser(String email, Consumer<String> output) {
         this.userEmail = email;
         this.tasks = FileManager.loadTasks(email);
         this.subjects = new ArrayList<>();
-        this.outputArea = outputArea;
-        this.timer = new StandardPomodoroTimer(outputArea);
+        this.output = output;
+        this.timer = new StandardPomodoroTimer(output);
 
-        // initialize subjects from tasks
+        // Initialize subjects from tasks
         for (Task t : tasks) {
-            boolean exists = false;
-            for (Subject s : subjects) {
-                if (s.getName().equalsIgnoreCase(t.getSubject())) {
-                    exists = true;
-                    break;
-                }
-            }
-            if (!exists) subjects.add(new Subject(t.getSubject()));
+            subjects.stream()
+                    .filter(s -> s.getName().equalsIgnoreCase(t.getSubject()))
+                    .findFirst()
+                    .orElseGet(() -> {
+                        Subject newSubject = new Subject(t.getSubject());
+                        subjects.add(newSubject);
+                        return newSubject;
+                    });
         }
     }
+
     public String getEmail() {
         return userEmail;
     }
+
     public List<Subject> getSubjects() {
         return subjects;
     }
@@ -39,50 +188,51 @@ public class RegularUser implements TaskManager {
     public void addTask(Task task) {
         tasks.add(task);
 
-        boolean subjectExists = false;
-        for (Subject s : subjects) {
-            if (s.getName().equalsIgnoreCase(task.getSubject())) {
-                subjectExists = true;
-                break;
-            }
-        }
-        if (!subjectExists) subjects.add(new Subject(task.getSubject()));
+        // Add subject if needed
+        subjects.stream()
+                .filter(s -> s.getName().equalsIgnoreCase(task.getSubject()))
+                .findFirst()
+                .orElseGet(() -> {
+                    Subject newSubject = new Subject(task.getSubject());
+                    subjects.add(newSubject);
+                    return newSubject;
+                });
 
         FileManager.saveTasks(userEmail, tasks);
-        System.out.println("[Task Added] " + task);
+        output.accept("[Task Added] " + task);
     }
 
     @Override
     public void showTasks() {
         if (tasks.isEmpty()) {
-            System.out.println("[Info] No tasks added yet.");
+            output.accept("[Info] No tasks added yet.");
             return;
         }
-        System.out.println("\n[Your Task List]");
+        output.accept("\n[Your Task List]");
         for (int i = 0; i < tasks.size(); i++) {
-            System.out.println("[" + (i + 1) + "] " + tasks.get(i));
+            output.accept("[" + (i + 1) + "] " + tasks.get(i));
         }
     }
 
     @Override
     public void runPomodoroSessions() {
         if (tasks.isEmpty()) {
-            System.out.println("[Info] No tasks to run Pomodoro sessions.");
+            output.accept("[Info] No tasks to run Pomodoro sessions.");
             return;
         }
 
         for (Task task : tasks) {
             if (task.isCompleted()) continue;
 
-            System.out.println("\n[Starting Task] " + task.getName());
+            output.accept("\n[Starting Task] " + task.getName());
             int sessionCount = task.getTimeInMinutes() / 25;
             for (int i = 0; i < sessionCount; i++) {
-                System.out.println("[Session] " + (i + 1) + "/" + sessionCount);
+                output.accept("[Session] " + (i + 1) + "/" + sessionCount);
                 timer.startSession();
                 timer.takeBreak();
             }
 
-            // add time to corresponding subject
+            // Update subject time
             for (Subject s : subjects) {
                 if (s.getName().equalsIgnoreCase(task.getSubject())) {
                     s.addTime(task.getTimeInMinutes());
@@ -98,7 +248,7 @@ public class RegularUser implements TaskManager {
         }
         tasks.get(index).setCompleted(true);
         FileManager.saveTasks(userEmail, tasks);
-        System.out.println("[Update] Task marked as completed: " + tasks.get(index).getName());
+        output.accept("[Update] Task marked as completed: " + tasks.get(index).getName());
     }
 
     public void deleteTask(int index) throws InvalidTaskException {
@@ -107,24 +257,22 @@ public class RegularUser implements TaskManager {
         }
         Task removed = tasks.remove(index);
         FileManager.saveTasks(userEmail, tasks);
-        System.out.println("[Update] Task deleted: " + removed.getName());
+        output.accept("[Update] Task deleted: " + removed.getName());
     }
 
-
     public int getTotalStudyTime() {
-        int total = 0;
-        for (Task t : tasks) total += t.getTimeInMinutes();
-        return total;
+        return tasks.stream().mapToInt(Task::getTimeInMinutes).sum();
     }
 
     public void showSubjectSummary() {
         if (subjects.isEmpty()) {
-            System.out.println("[Info] No study summary available.");
+            output.accept("[Info] No study summary available.");
             return;
         }
-        System.out.println("\n[Study Summary by Subject]");
+        output.accept("\n[Study Summary by Subject]");
         for (Subject s : subjects) {
-            System.out.println("- Subject: " + s.getName() + " | Total Time: " + s.getTotalTimeSpent() + " minutes");
+            output.accept("- Subject: " + s.getName() +
+                    " | Total Time: " + s.getTotalTimeSpent() + " minutes");
         }
     }
 }

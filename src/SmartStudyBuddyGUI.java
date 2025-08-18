@@ -99,8 +99,7 @@ public class SmartStudyBuddyGUI {
         String password = new String(passwordField.getPassword());
         try {
             User u = userManager.login(email, password);
-            // Pass JTextArea for Pomodoro messages
-            user = new RegularUser(u.getEmail(), pomodoroOutput);
+            user = new RegularUser(u.getEmail(), pomodoroOutput); // GUI constructor
             createDashboardPanel();
         } catch (UserNotFoundException ex) {
             JOptionPane.showMessageDialog(frame, ex.getMessage(), "Login Error", JOptionPane.ERROR_MESSAGE);

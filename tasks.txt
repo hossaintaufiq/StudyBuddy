@@ -1,0 +1,2 @@
+Mid Exam,CSE,120,true
+MID EXAM,CSE215,200,false

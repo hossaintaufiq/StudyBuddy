@@ -1,3 +1,3 @@
 Final Exam,Che101,90,true
 LabFinal,CSE311,120,true
-Project Showcase,CSE327,60,false
+Presentation,pol,10,false

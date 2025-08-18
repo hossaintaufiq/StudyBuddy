@@ -1,83 +1,153 @@
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.*;
 import java.util.List;
 
 public class SmartStudyBuddyGUI {
+
     private JFrame frame;
-    private JPanel loginPanel, dashboardPanel;
+    private JPanel mainPanel, loginPanel, dashboardPanel, contentPanel;
     private JTextField emailField;
     private JPasswordField passwordField;
     private RegularUser user;
-    private UserManager userManager = new UserManager();
+    private final UserManager userManager = new UserManager();
 
-    // Pomodoro messages display
+    private JTable taskTable;
+    private DefaultTableModel taskTableModel;
     private JTextArea pomodoroOutput;
-    private JScrollPane pomodoroScroll;
+
+    // Colors
+    private final Color PRIMARY_COLOR = new Color(52, 152, 219);   // blue
+    private final Color SECONDARY_COLOR = new Color(236, 240, 241); // light gray
+    private final Color HEADER_COLOR = new Color(41, 128, 185);    // darker blue
 
     public SmartStudyBuddyGUI() {
+        // Main frame
         frame = new JFrame("Smart Study Buddy");
-        frame.setSize(600, 500);
+        frame.setSize(900, 600);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
-        frame.setLayout(new CardLayout());
 
-        pomodoroOutput = new JTextArea(10, 40);
-        pomodoroOutput.setEditable(false);
-        pomodoroScroll = new JScrollPane(pomodoroOutput);
+        mainPanel = new JPanel(new CardLayout());
+        frame.add(mainPanel);
 
         createLoginPanel();
-        frame.add(loginPanel, "Login");
+        createDashboardPanel();
+
         frame.setVisible(true);
+        switchPanel("Login");
     }
 
+    /** ---------------- LOGIN PANEL ---------------- */
     private void createLoginPanel() {
-        loginPanel = new JPanel();
-        loginPanel.setLayout(new GridLayout(5, 2, 10, 10));
+        loginPanel = new JPanel(new BorderLayout());
+        loginPanel.setBackground(SECONDARY_COLOR);
 
-        emailField = new JTextField();
-        passwordField = new JPasswordField();
+        JLabel title = new JLabel("📘 Smart Study Buddy", JLabel.CENTER);
+        title.setFont(new Font("SansSerif", Font.BOLD, 28));
+        title.setForeground(Color.WHITE);
+
+        JPanel header = new JPanel();
+        header.setBackground(HEADER_COLOR);
+        header.add(title);
+
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setBackground(SECONDARY_COLOR);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JLabel emailLbl = new JLabel("Email:");
+        JLabel passLbl = new JLabel("Password:");
+        emailField = new JTextField(20);
+        passwordField = new JPasswordField(20);
 
         JButton loginBtn = new JButton("Login");
         JButton registerBtn = new JButton("Register");
 
-        loginPanel.add(new JLabel("Email:"));
-        loginPanel.add(emailField);
-        loginPanel.add(new JLabel("Password:"));
-        loginPanel.add(passwordField);
-        loginPanel.add(loginBtn);
-        loginPanel.add(registerBtn);
+        loginBtn.setBackground(PRIMARY_COLOR);
+        loginBtn.setForeground(Color.WHITE);
+        registerBtn.setBackground(PRIMARY_COLOR);
+        registerBtn.setForeground(Color.WHITE);
+
+        gbc.gridx = 0; gbc.gridy = 0; form.add(emailLbl, gbc);
+        gbc.gridx = 1; form.add(emailField, gbc);
+        gbc.gridx = 0; gbc.gridy = 1; form.add(passLbl, gbc);
+        gbc.gridx = 1; form.add(passwordField, gbc);
+        gbc.gridx = 0; gbc.gridy = 2; form.add(loginBtn, gbc);
+        gbc.gridx = 1; form.add(registerBtn, gbc);
+
+        loginPanel.add(header, BorderLayout.NORTH);
+        loginPanel.add(form, BorderLayout.CENTER);
 
         loginBtn.addActionListener(e -> login());
         registerBtn.addActionListener(e -> register());
+
+        mainPanel.add(loginPanel, "Login");
     }
 
+    /** ---------------- DASHBOARD PANEL ---------------- */
     private void createDashboardPanel() {
-        dashboardPanel = new JPanel();
-        dashboardPanel.setLayout(new GridLayout(9, 1, 5, 5));
+        dashboardPanel = new JPanel(new BorderLayout());
 
-        JButton addTaskBtn = new JButton("Add Task");
-        JButton showTaskBtn = new JButton("Show Tasks");
-        JButton markCompletedBtn = new JButton("Mark Completed");
-        JButton deleteTaskBtn = new JButton("Delete Task");
-        JButton pomodoroBtn = new JButton("Start Pomodoro");
-        JButton summaryBtn = new JButton("View Study Summary");
-        JButton totalTimeBtn = new JButton("Total Study Time");
-        JButton logoutBtn = new JButton("Logout");
+        // Header
+        JLabel title = new JLabel("📘 Smart Study Buddy Dashboard", JLabel.CENTER);
+        title.setFont(new Font("SansSerif", Font.BOLD, 24));
+        title.setForeground(Color.WHITE);
+        JPanel header = new JPanel();
+        header.setBackground(HEADER_COLOR);
+        header.add(title);
 
-        dashboardPanel.add(addTaskBtn);
-        dashboardPanel.add(showTaskBtn);
-        dashboardPanel.add(markCompletedBtn);
-        dashboardPanel.add(deleteTaskBtn);
-        dashboardPanel.add(pomodoroBtn);
-        dashboardPanel.add(summaryBtn);
-        dashboardPanel.add(totalTimeBtn);
-        dashboardPanel.add(logoutBtn);
-        dashboardPanel.add(pomodoroScroll);
+        // Left menu
+        JPanel menuPanel = new JPanel(new GridLayout(8, 1, 10, 10));
+        menuPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        menuPanel.setBackground(SECONDARY_COLOR);
 
-        // Button Actions
+        JButton addTaskBtn = createMenuButton("➕ Add Task");
+        JButton showTaskBtn = createMenuButton("📋 Refresh Tasks");
+        JButton markCompletedBtn = createMenuButton("✅ Mark Completed");
+        JButton deleteTaskBtn = createMenuButton("🗑️ Delete Task");
+        JButton pomodoroBtn = createMenuButton("⏳ Start Pomodoro");
+        JButton summaryBtn = createMenuButton("📊 Study Summary");
+        JButton totalTimeBtn = createMenuButton("⏱️ Total Study Time");
+        JButton logoutBtn = createMenuButton("🚪 Logout");
+
+        menuPanel.add(addTaskBtn);
+        menuPanel.add(showTaskBtn);
+        menuPanel.add(markCompletedBtn);
+        menuPanel.add(deleteTaskBtn);
+        menuPanel.add(pomodoroBtn);
+        menuPanel.add(summaryBtn);
+        menuPanel.add(totalTimeBtn);
+        menuPanel.add(logoutBtn);
+
+        // Right content area
+        contentPanel = new JPanel(new BorderLayout(10, 10));
+        contentPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        // Task Table
+        taskTableModel = new DefaultTableModel(new String[]{"#", "Task", "Subject", "Time (mins)", "Status"}, 0);
+        taskTable = new JTable(taskTableModel);
+        JScrollPane taskScroll = new JScrollPane(taskTable);
+
+        // Pomodoro output
+        pomodoroOutput = new JTextArea(6, 40);
+        pomodoroOutput.setEditable(false);
+        pomodoroOutput.setBorder(BorderFactory.createTitledBorder("Pomodoro Progress"));
+        JScrollPane pomodoroScroll = new JScrollPane(pomodoroOutput);
+
+        contentPanel.add(taskScroll, BorderLayout.CENTER);
+        contentPanel.add(pomodoroScroll, BorderLayout.SOUTH);
+
+        // Add to dashboard
+        dashboardPanel.add(header, BorderLayout.NORTH);
+        dashboardPanel.add(menuPanel, BorderLayout.WEST);
+        dashboardPanel.add(contentPanel, BorderLayout.CENTER);
+
+        // Button actions
         addTaskBtn.addActionListener(e -> addTask());
-        showTaskBtn.addActionListener(e -> showTasks());
+        showTaskBtn.addActionListener(e -> refreshTasks());
         markCompletedBtn.addActionListener(e -> markTaskCompleted());
         deleteTaskBtn.addActionListener(e -> deleteTask());
         pomodoroBtn.addActionListener(e -> runPomodoro());
@@ -85,125 +155,158 @@ public class SmartStudyBuddyGUI {
         totalTimeBtn.addActionListener(e -> showTotalTime());
         logoutBtn.addActionListener(e -> logout());
 
-        frame.add(dashboardPanel, "Dashboard");
-        switchPanel("Dashboard");
+        mainPanel.add(dashboardPanel, "Dashboard");
     }
 
+    private JButton createMenuButton(String text) {
+        JButton btn = new JButton(text);
+        btn.setBackground(PRIMARY_COLOR);
+        btn.setForeground(Color.WHITE);
+        btn.setFocusPainted(false);
+        btn.setFont(new Font("SansSerif", Font.BOLD, 14));
+        return btn;
+    }
+
+    /** ---------------- HELPER METHODS ---------------- */
     private void switchPanel(String name) {
-        CardLayout cl = (CardLayout) frame.getContentPane().getLayout();
-        cl.show(frame.getContentPane(), name);
+        CardLayout cl = (CardLayout) mainPanel.getLayout();
+        cl.show(mainPanel, name);
     }
 
     private void login() {
-        String email = emailField.getText();
-        String password = new String(passwordField.getPassword());
+        String email = emailField.getText().trim();
+        String password = new String(passwordField.getPassword()).trim();
         try {
             User u = userManager.login(email, password);
-            user = new RegularUser(u.getEmail(), pomodoroOutput); // GUI constructor
-            createDashboardPanel();
-        } catch (UserNotFoundException ex) {
+            user = new RegularUser(u.getEmail(), pomodoroOutput);
+            refreshTasks();
+            switchPanel("Dashboard");
+        } catch (Exception ex) {
             JOptionPane.showMessageDialog(frame, ex.getMessage(), "Login Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void register() {
-        String email = emailField.getText();
-        String password = new String(passwordField.getPassword());
+        String email = emailField.getText().trim();
+        String password = new String(passwordField.getPassword()).trim();
         try {
             userManager.register(email, password);
-            JOptionPane.showMessageDialog(frame, "Registration Successful!", "Info", JOptionPane.INFORMATION_MESSAGE);
-        } catch (UserAlreadyExistsException ex) {
+            JOptionPane.showMessageDialog(frame, "Registration successful!", "Info", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception ex) {
             JOptionPane.showMessageDialog(frame, ex.getMessage(), "Registration Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    // ---------------- Task Methods ----------------
+    private void refreshTasks() {
+        taskTableModel.setRowCount(0);
+        List<Task> tasks = FileManager.loadTasks(user.getEmail());
+        for (int i = 0; i < tasks.size(); i++) {
+            Task t = tasks.get(i);
+            taskTableModel.addRow(new Object[]{i + 1, t.getName(), t.getSubject(), t.getTimeMinutes(), t.isCompleted() ? "Done" : "Pending"});
+        }
+    }
 
     private void addTask() {
         JTextField nameField = new JTextField();
         JTextField subjectField = new JTextField();
         JTextField timeField = new JTextField();
-        Object[] fields = {
-                "Task Name:", nameField,
-                "Subject:", subjectField,
-                "Time (minutes):", timeField
-        };
-        int option = JOptionPane.showConfirmDialog(frame, fields, "Add New Task", JOptionPane.OK_CANCEL_OPTION);
-        if (option == JOptionPane.OK_OPTION) {
+
+        JPanel panel = new JPanel(new GridLayout(3, 2, 5, 5));
+        panel.add(new JLabel("Task Name:")); panel.add(nameField);
+        panel.add(new JLabel("Subject:")); panel.add(subjectField);
+        panel.add(new JLabel("Time (mins):")); panel.add(timeField);
+
+        int result = JOptionPane.showConfirmDialog(frame, panel, "Add Task", JOptionPane.OK_CANCEL_OPTION);
+        if (result == JOptionPane.OK_OPTION) {
             try {
-                String name = nameField.getText();
-                String subject = subjectField.getText();
-                int time = Integer.parseInt(timeField.getText());
+                String name = nameField.getText().trim();
+                String subject = subjectField.getText().trim();
+                int time = Integer.parseInt(timeField.getText().trim());
                 user.addTask(new Task(name, subject, time));
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(frame, "Invalid time input!", "Error", JOptionPane.ERROR_MESSAGE);
+                refreshTasks();
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(frame, "Invalid input!", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
-    private void showTasks() {
-        List<Task> tasks = FileManager.loadTasks(user.getEmail());
-        if (tasks.isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "No tasks added.", "Tasks", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < tasks.size(); i++) {
-            sb.append("[").append(i + 1).append("] ").append(tasks.get(i)).append("\n");
-        }
-        JOptionPane.showMessageDialog(frame, sb.toString(), "Tasks", JOptionPane.INFORMATION_MESSAGE);
-    }
-
     private void markTaskCompleted() {
-        String input = JOptionPane.showInputDialog(frame, "Enter task number to mark completed:");
-        if (input != null) {
+        int row = taskTable.getSelectedRow();
+        if (row >= 0) {
             try {
-                int index = Integer.parseInt(input) - 1;
-                user.markTaskCompleted(index);
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(frame, "Invalid input!", "Error", JOptionPane.ERROR_MESSAGE);
-            } catch (InvalidTaskException ex) {
-                JOptionPane.showMessageDialog(frame, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                user.markTaskCompleted(row);
+                refreshTasks();
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(frame, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
     private void deleteTask() {
-        String input = JOptionPane.showInputDialog(frame, "Enter task number to delete:");
-        if (input != null) {
+        int row = taskTable.getSelectedRow();
+        if (row >= 0) {
             try {
-                int index = Integer.parseInt(input) - 1;
-                user.deleteTask(index);
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(frame, "Invalid input!", "Error", JOptionPane.ERROR_MESSAGE);
-            } catch (InvalidTaskException ex) {
-                JOptionPane.showMessageDialog(frame, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                user.deleteTask(row);
+                refreshTasks();
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(frame, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
     private void runPomodoro() {
-        pomodoroOutput.setText(""); // clear previous messages
-        user.runPomodoroSessions();
-        JOptionPane.showMessageDialog(frame, "Pomodoro sessions completed!", "Info", JOptionPane.INFORMATION_MESSAGE);
+        pomodoroOutput.setText("");
+        startPomodoroSession(1, 25, 5, 4); // session=1, work=25, break=5, totalSessions=4
     }
 
+    private void startPomodoroSession(int session, int workTime, int breakTime, int totalSessions) {
+        appendPomodoroLog("Session " + session + " started! Work for " + workTime + " minutes...");
+
+        countdown(workTime, "Work", () -> {
+            appendPomodoroLog("Break time! Take " + breakTime + " minutes.");
+            countdown(breakTime, "Break", () -> {
+                if (session < totalSessions) {
+                    startPomodoroSession(session + 1, workTime, breakTime, totalSessions);
+                } else {
+                    appendPomodoroLog("✅ All Pomodoro sessions completed!");
+                }
+            });
+        });
+    }
+
+    private void countdown(int minutes, String label, Runnable onFinish) {
+        final int[] secondsLeft = {minutes * 60};
+        Timer timer = new Timer(1000, e -> {
+            int min = secondsLeft[0] / 60;
+            int sec = secondsLeft[0] % 60;
+            pomodoroOutput.setText(label + " time: " + String.format("%02d:%02d", min, sec));
+            secondsLeft[0]--;
+
+            if (secondsLeft[0] < 0) {
+                ((Timer) e.getSource()).stop();
+                onFinish.run();
+            }
+        });
+        timer.start();
+    }
+
+    private void appendPomodoroLog(String text) {
+        pomodoroOutput.append(text + "\n");
+    }
+
+
+
     private void showSummary() {
-        List<Subject> subjects = user.getSubjects();
-        if (subjects.isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "No summary available.", "Study Summary", JOptionPane.INFORMATION_MESSAGE);
-            return;
+        StringBuilder sb = new StringBuilder("Study Summary:\n");
+        for (Subject s : user.getSubjects()) {
+            sb.append("- ").append(s.getName())
+                    .append(": ").append(s.getTotalTimeSpent()).append(" mins\n");
         }
-        StringBuilder sb = new StringBuilder();
-        for (Subject s : subjects) {
-            sb.append("- Subject: ").append(s.getName())
-                    .append(" | Total Time: ").append(s.getTotalTimeSpent()).append(" mins\n");
-        }
-        JOptionPane.showMessageDialog(frame, sb.toString(), "Study Summary", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(frame, sb.toString(), "Summary", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void showTotalTime() {
-        JOptionPane.showMessageDialog(frame, "Total Study Time: " + user.getTotalStudyTime() + " minutes", "Info", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(frame, "Total Study Time: " + user.getTotalStudyTime() + " mins");
     }
 
     private void logout() {

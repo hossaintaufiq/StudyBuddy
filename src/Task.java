@@ -11,8 +11,12 @@ public class Task {
             this.timeInMinutes = timeInMinutes;
             this.isCompleted = false;
         }
+    public int getTimeMinutes() {
+        return timeInMinutes;
+    }
 
-        public String getName() {
+
+    public String getName() {
             return name;
         }
 
